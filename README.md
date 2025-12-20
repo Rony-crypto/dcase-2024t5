@@ -2,7 +2,10 @@ This readme is clone from . My notes are in !- HERE-!
 
 
 !-
-
+changed files from original
+copywavefile.txt
+data_prep py
+/config/train.yaml
 
 
 
