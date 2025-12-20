@@ -3,11 +3,14 @@ This readme is clone from . My notes are in !- HERE-!
 
 !-
 changed files from original
-copywavefile.txt
-data_prep py
-/config/train.yaml
 
+1.copywavefile.txt
 
+2.data_prep py
+
+3./config/train.yaml
+
+4. Read me :)
 
 -!
 # Baseline for DCASE 2024 Task 5
