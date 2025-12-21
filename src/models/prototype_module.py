@@ -318,6 +318,40 @@ class PrototypeModule(LightningModule):
         )
         for file in glob("*/PSDS_Eval_*.csv"):
             det_t = pd.read_csv(os.path.join(file), sep="\t")
+
+            # Merge overlapping detections for the same event_label and
+            # filename. PSDSEval requires detections for a given class/file
+            # not to overlap; collapse any intersecting intervals to avoid
+            # PSDSEvalError.
+            def _merge_overlaps(df):
+                df = df.copy()
+                # ensure numeric
+                df["onset"] = df["onset"].astype(float)
+                df["offset"] = df["offset"].astype(float)
+                rows = []
+                for (label, fname), g in df.groupby(["event_label", "filename"]):
+                    g_sorted = g.sort_values("onset")
+                    cur_on, cur_off = None, None
+                    for _, r in g_sorted.iterrows():
+                        o = float(r["onset"]) 
+                        f = float(r["offset"]) 
+                        if cur_on is None:
+                            cur_on, cur_off = o, f
+                        else:
+                            # overlap or contiguous -> merge
+                            if o <= cur_off + 1e-9:
+                                cur_off = max(cur_off, f)
+                            else:
+                                rows.append([label, cur_on, cur_off, fname])
+                                cur_on, cur_off = o, f
+                    if cur_on is not None:
+                        rows.append([label, cur_on, cur_off, fname])
+                if len(rows) == 0:
+                    return df
+                merged = pd.DataFrame(rows, columns=["event_label", "onset", "offset", "filename"])
+                return merged
+
+            det_t = _merge_overlaps(det_t)
             psds_eval.add_operating_point(det_t)
         psds = psds_eval.psds(alpha_ct, alpha_st, max_efpr)
         print(f"\nPSDS-Score: {psds.value:.5f}")
@@ -411,6 +445,32 @@ class PrototypeModule(LightningModule):
             "interval": "epoch",
             "frequency": 1,
         }]
+
+    def lr_scheduler_step(self, scheduler, optimizer_idx, metric=None):
+        """Compatibility hook: manually step the LR scheduler.
+
+        Some combinations of `torch` and `pytorch_lightning` validate the
+        scheduler API strictly. Providing this hook avoids the
+        `MisconfigurationException` by stepping the scheduler manually.
+        """
+        # Prefer stepping with metric if provided and supported.
+        if metric is None:
+            try:
+                scheduler.step()
+            except TypeError:
+                # Fallback: some schedulers expect an epoch arg
+                try:
+                    scheduler.step(None)
+                except Exception:
+                    pass
+        else:
+            try:
+                scheduler.step(metric)
+            except TypeError:
+                try:
+                    scheduler.step()
+                except Exception:
+                    pass
 
     # def merging_segment(self, pos_onset_offset, neg_min_length, max_len):
     #     onset, offset = [], []
