@@ -416,7 +416,7 @@ class PrototypeModule(LightningModule):
         self.convert_eval_val()
         self.calculate_psds()
 
-    def on_epoch_end(self):
+    def on_train_epoch_end(self):
         # reset metrics at the end of every epoch
         pass
 

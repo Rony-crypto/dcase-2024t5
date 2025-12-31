@@ -1,17 +1,42 @@
-# Virtual environments
-.venv/
-venv/
-
-# Logs
-*.log
-logs/
-
-# Python cache
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+dcase_t5/
 
-# OS files
+# PyTorch Lightning / Training
+logs/
+wandb/
+checkpoints/
+*.ckpt
+lightning_logs/
+*.log
+
+# Hydra
+outputs/
+multirun/
+.hydra/
+
+# Data (don't commit dataset)
+data/
+*.wav
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
-
-# Backup files
-*.bak
+Thumbs.db
